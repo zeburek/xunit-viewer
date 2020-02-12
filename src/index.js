@@ -2,6 +2,11 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import 'bulma/css/bulma.css'
 import '@fortawesome/fontawesome-free/js/all'
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route
+} from 'react-router-dom'
 
 import './app/index.css'
 import App from './app/app.js'
@@ -93,4 +98,12 @@ cwd: /tmp/tmp9q8tpxi2 emanate --source /tmp/tmpn4lvoqq7/src clean '/tmp/tmpn4lvo
   }]
 }
 
-ReactDOM.render(<App files={files} />, document.getElementById('root'))
+const Container = () => (
+  <Router>
+    <Switch>
+      <Route path='/' render={(props) => <App {...props} files={files} />} />
+    </Switch>
+  </Router>
+)
+
+ReactDOM.render(<Container />, document.getElementById('root'))

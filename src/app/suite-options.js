@@ -48,7 +48,7 @@ export default ({ suitesExpanded = true, count = 0, total = 0, dispatch, active 
     <div className='card-content'>
       {active
         ? <Toggle
-          onChange={() => dispatch({ type: 'toggle-all-suites' })}
+          onChange={() => dispatch({ type: 'toggle-all-suites', payload: { active: !suitesExpanded } })}
           active={suitesExpanded}
           onLabel='Expanded'
           offLabel='Contracted'

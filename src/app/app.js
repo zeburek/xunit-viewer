@@ -1,6 +1,7 @@
 import React, { useReducer, useEffect } from 'react'
 import merge from 'merge'
 import fuzzy from 'fuzzy'
+import qs from 'qs'
 
 import Hero from './hero'
 import SuiteOptions from './suite-options'
@@ -28,8 +29,6 @@ const parseAll = async (dispatch, files, suites) => {
 }
 
 const reducer = (state, { type, payload }) => {
-  if (process.env.NODE_ENV === 'development') console.log(type, payload)
-
   const update = {}
   update.currentSuites = state.currentSuites
 
@@ -259,9 +258,34 @@ const initialState = {
   }
 }
 
-const App = ({ files }) => {
+const search = (history, key, value) => {
+  const search = qs.parse(history.location.search, { ignoreQueryPrefix: true })
+  if (value !== '') search[key] = value
+  else delete search[key]
+  history.push({
+    search: qs.stringify(search)
+  })
+}
+
+const historyDispatcher = (history, dispatch) => (action) => {
+  const { type, payload } = action
+  if (type === 'search-suites') search(history, 's', payload.value)
+  if (type === 'search-tests') search(history, 't', payload.value)
+  if (type === 'search-properties') search(history, 'p', payload.value)
+  if (type === 'toggle-all-suites') search(history, 'se', payload.active ? '' : 'f')
+  if (type === 'toggle-all-properties') search(history, 'pe', payload.active ? '' : 'f')
+  if (type === 'toggle-properties-visbility') search(history, 'pv', payload.active ? '' : 'f')
+  if (type === 'toggle-test-visibility') search(history, `t${payload.status[0]}v`, payload.active ? '' : 'f')
+  if (type === 'toggle-test-expanded') search(history, `t${payload.status[0]}e`, payload.active ? '' : 'f')
+  if (type === 'toggle-test-raw') search(history, `t${payload.status[0]}r`, payload.active ? '' : 'f')
+
+  dispatch(action)
+}
+
+const App = ({ files, history }) => {
   const [state, dispatch] = useReducer(reducer, initialState)
-  if (Object.keys(state.suites).length === 0) parseAll(dispatch, files, {})
+  const dis = historyDispatcher(history, dispatch)
+  if (Object.keys(state.suites).length === 0) parseAll(dis, files, {})
 
   let currentPropertiesCount = 0
   let propertiesTotal = 0
@@ -291,7 +315,7 @@ const App = ({ files }) => {
   })
 
   const onUpdate = ({ files }) => {
-    parseAll(dispatch, files, {})
+    parseAll(dis, files, {})
   }
 
   window.sockets = window.sockets || null
@@ -303,13 +327,13 @@ const App = ({ files }) => {
   })
 
   return <div>
-    <Hero active={state.menuActive} onClick={() => { dispatch({ type: 'toggle-menu' }) }} />
+    <Hero active={state.menuActive} onClick={() => { dis({ type: 'toggle-menu' }) }} />
     <header className={`is-${!state.menuActive ? 'hidden' : 'shown'}`}>
       <div className='container'>
         <SuiteOptions
           active={state.suiteOptionsActive}
           suitesExpanded={state.suitesExpanded}
-          dispatch={dispatch}
+          dispatch={dis}
           count={Object.keys(state.currentSuites).length}
           total={Object.keys(state.suites).length}
         />
@@ -319,7 +343,7 @@ const App = ({ files }) => {
           testCounts={testCounts}
           count={testCount}
           total={testTotal}
-          dispatch={dispatch}
+          dispatch={dis}
         />
         <PropertiesOptions
           propertiesExpanded={state.propertiesExpanded}
@@ -327,17 +351,17 @@ const App = ({ files }) => {
           active={state.propertiesOptionsActive}
           count={currentPropertiesCount}
           total={propertiesTotal}
-          dispatch={dispatch}
+          dispatch={dis}
         />
         {process.env.NODE_ENV === 'development'
-          ? <Files files={files} active={state.activeFiles} setActive={() => { dispatch({ type: 'toggle-files' }) }} />
+          ? <Files files={files} active={state.activeFiles} setActive={() => { dis({ type: 'toggle-files' }) }} />
           : null}
       </div>
     </header>
     <main>
       <div className='container'>
         <div>
-          {Object.values(state.currentSuites).map(suite => <Suite key={suite.id} {...suite} dispatch={dispatch} />)}
+          {Object.values(state.currentSuites).map(suite => <Suite key={suite.id} {...suite} dispatch={dis} />)}
         </div>
       </div>
     </main>
