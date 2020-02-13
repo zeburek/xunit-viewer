@@ -26,7 +26,7 @@ Xunit Viewer supports node LTS version, but should support 10+
 ## Usage, CLI
 
 ```sh
-npm i -g xunit-viewer
+npm i -g git+https://github.com/zeburek/xunit-viewer.git
 xunit-viewer --help
 ```
 
